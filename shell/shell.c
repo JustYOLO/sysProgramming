@@ -8,10 +8,6 @@
 #define MAX_BUF 128
 #define PATH_MAX 1024 // 경로 최대값
 /*
- * 1. get current dir in c
- * -> use getcwd() in unistd.h
- * 2. how to tokenize instruction
- * -> use strtok() in string.h
 */
 
 bool cmd_help(int argc, char* argv[]);
@@ -58,8 +54,14 @@ bool run(char* line)
     char delims = ' '; // default delimiter is ' ' (single space) 
     char* tokens[MAX_BUF];
     int tokenCount = tokenize(line, &delims, tokens, sizeof(tokens) / sizeof(char*));
+    
+
+    /* token checking code
     printf("%d tokens input\n", tokenCount);
-    for(int i = 0; i < tokenCount; i++)
-        printf("token %d: %s\n", i + 1, tokens[i]);
+    int i;
+    for(i = 0; i < tokenCount; i++)
+        printf("token %d: %s\n", i + 1, tokens[i]);    
+    */
+
     return false;
 }
