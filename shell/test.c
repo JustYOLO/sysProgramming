@@ -1,20 +1,12 @@
-#include <sys/types.h>
+#include <stdio.h> 
 #include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-int main()
+int main(void) 
 {
-    pid_t fork_return;
-    printf("hello, my pid : %d\n", getpid());
-
-    if( (fork_return = fork()) < 0)
+    while(1)
     {
-        printf("fork error\n");
-        exit(-1);
-    } else if(fork_return == 0) {
-        printf("child pid: %d, parent pid: %d\n", getpid(), getppid());
-    } else {
-        wait(NULL);
+
     }
-}
+
+    return 0;
+} 

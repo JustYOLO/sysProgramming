@@ -2,10 +2,11 @@
 triple:          'arm64-apple-darwin'
 binary-path:     '/Users/lee/Documents/sysProgramming/shell/shell'
 relocations:
-  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x10000398C, symSize: 0xE8 }
-  - { offsetInCU: 0x41, offset: 0x41, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x10000398C, symSize: 0xE8 }
-  - { offsetInCU: 0x78, offset: 0x78, size: 0x8, addend: 0x0, symName: _run, symObjAddr: 0xE8, symBinAddr: 0x100003A74, symSize: 0x13C }
-  - { offsetInCU: 0xD8, offset: 0xD8, size: 0x8, addend: 0x0, symName: _tokenize, symObjAddr: 0x224, symBinAddr: 0x100003BB0, symSize: 0xE4 }
-  - { offsetInCU: 0x154, offset: 0x154, size: 0x8, addend: 0x0, symName: _bulitinHandler, symObjAddr: 0x308, symBinAddr: 0x100003C94, symSize: 0x134 }
-  - { offsetInCU: 0x1A6, offset: 0x1A6, size: 0x8, addend: 0x0, symName: _printTime, symObjAddr: 0x43C, symBinAddr: 0x100003DC8, symSize: 0xB8 }
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x1000036CC, symSize: 0xE8 }
+  - { offsetInCU: 0x46, offset: 0x46, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x1000036CC, symSize: 0xE8 }
+  - { offsetInCU: 0x7D, offset: 0x7D, size: 0x8, addend: 0x0, symName: _run, symObjAddr: 0xE8, symBinAddr: 0x1000037B4, symSize: 0x154 }
+  - { offsetInCU: 0xDD, offset: 0xDD, size: 0x8, addend: 0x0, symName: _tokenize, symObjAddr: 0x23C, symBinAddr: 0x100003908, symSize: 0xFC }
+  - { offsetInCU: 0x159, offset: 0x159, size: 0x8, addend: 0x0, symName: _bulitinHandler, symObjAddr: 0x338, symBinAddr: 0x100003A04, symSize: 0x134 }
+  - { offsetInCU: 0x1AB, offset: 0x1AB, size: 0x8, addend: 0x0, symName: _executeExternal, symObjAddr: 0x46C, symBinAddr: 0x100003B38, symSize: 0x1CC }
+  - { offsetInCU: 0x227, offset: 0x227, size: 0x8, addend: 0x0, symName: _printTime, symObjAddr: 0x638, symBinAddr: 0x100003D04, symSize: 0xB8 }
 ...

@@ -7,14 +7,17 @@
 #include <stdbool.h> // bool type
 #include <string.h> // strtok()
 #include <time.h> 
+#include <errno.h>
 #define MAX_BUF 128
 #define PATH_MAX 1024 
+#define DELIM_CHARS " "
+#define EX_PATH "/bin/" // path for external commands
 
 int tokenize(char* buf, char* delims, char* tokens[], int maxTokens);
 bool run(char* line);
 int bulitinHandler(char* tokens[]); // handles bulit-in shell command
 void printTime(); // print time and studnet id
-int execute(char* tokens[], int tokenCount); // executes program
+int executeExternal(char* tokens[], int tokenCount); // executes program
 
 int main()
 {
@@ -42,26 +45,27 @@ int tokenize(char* buf, char* delims, char* tokens[], int maxTokens)
     if(newline)
         *newline = (char *) 0;
     int tokenCount = 0;
-    char* token = strtok(buf, delims);
+    char* token = strtok(buf, DELIM_CHARS);
     while(token != NULL && tokenCount < maxTokens)
     {
         tokens[tokenCount] = token;
-        token = strtok(NULL, delims);
+        token = strtok(NULL, DELIM_CHARS);
         tokenCount++;
     }
     
+    tokens[tokenCount] = NULL;
     return tokenCount;
 }
 
 bool run(char* line)
 {
-    char delims = ' '; // default delimiter is ' ' (single space) 
+    char delims = " "; // default delimiter is ' ' (single space) 
     char* tokens[MAX_BUF];
     int tokenCount = tokenize(line, &delims, tokens, sizeof(tokens) / sizeof(char*));
     if(bulitinHandler(tokens))
     {
         printf("Not a bulit-in command %s\n", tokens[0]);
-        execute(tokens, tokenCount);
+        executeExternal(tokens, tokenCount);
     }
 
     
@@ -113,21 +117,59 @@ void printTime()
     printf("Current time: %d.%d.%d. %d:%d:%d\n", t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
 }
 
-int execute(char* tokens[], int tokenCount)
+int executeExternal(char* tokens[], int tokenCount)
 {
     pid_t fork_return;
-    if(strcmp(tokens[0], "ls") == 0)
+    // if(strcmp(tokens[0], "ls") == 0)
+    // {
+    //     if( (fork_return = fork()) < 0)
+    //     {
+    //         printf("fork error\n");
+    //         exit(-1);
+    //     } else if(fork_return == 0) // run ls
+    //     {
+    //         execl("/bin/ls", tokens, (char *) 0);
+    //     } else {
+    //         wait(NULL);
+    //     }
+    // }
+
+    int isDot = 0;
+    if(tokens[0][0] == '.')
     {
-        if( (fork_return = fork()) < 0)
+        printf("it starts with the dot\n");
+        isDot = 1;
+    }
+
+    bool isBackground = false;
+    if(strcmp(tokens[tokenCount - 1], "&") == 0)
+        isBackground = true;
+
+    if((fork_return = fork()) < 0)
+    {
+        printf("fork error\n");
+        exit(-1);
+    } else if(fork_return == 0) // runs external command
+    {
+        if(isBackground)
+            printf("Program started in background using pid: %d\n", getpid());
+        int status_code;
+        if(isDot != 1)
         {
-            printf("fork error\n");
-            exit(-1);
-        } else if(fork_return == 0) // run ls
-        {
-            execl("/bin/ls", tokens, (char *) 0);
+            status_code = execvp(tokens[0], tokens);
         } else {
-            wait(NULL);
+            status_code = execl(tokens[0], tokens, (char *) 0);
         }
+        if(status_code < 0)
+        {
+            printf("error occured with code: %d\n", status_code);
+            printf("errno: %d\n", errno);
+            exit(-1);
+        }
+        
+    } else {
+        if(!isBackground)
+            wait(NULL);
     }
 
     return 0;
