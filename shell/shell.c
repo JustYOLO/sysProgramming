@@ -134,11 +134,11 @@ int executeExternal(char* tokens[], int tokenCount)
     //     }
     // }
 
-    int isDot = 0;
-    if(tokens[0][0] == '.')
-    {
+    int curPath = 0;
+    if(tokens[0][0] == '.' && tokens[0][1] == '/')
+    { // if user wants to execute program in current path
         printf("it starts with the dot\n");
-        isDot = 1;
+        curPath = 1;
     }
 
     bool isBackground = false;
@@ -151,11 +151,9 @@ int executeExternal(char* tokens[], int tokenCount)
         exit(-1);
     } else if(fork_return == 0) // runs external command
     {
-        if(isBackground)
-            printf("Program started in background using pid: %d\n", getpid());
         int status_code;
-        if(isDot != 1)
-        {
+        if(curPath != 1)
+        { // executes program in path
             status_code = execvp(tokens[0], tokens);
         } else {
             status_code = execl(tokens[0], tokens, (char *) 0);
@@ -168,8 +166,12 @@ int executeExternal(char* tokens[], int tokenCount)
         }
         
     } else {
-        if(!isBackground)
-            wait(NULL);
+        if(isBackground)
+            printf("Program started in background using pid: %d\n", fork_return);
+        else {
+            int status;
+            waitpid(fork_return, &status, 0);
+        }
     }
 
     return 0;
