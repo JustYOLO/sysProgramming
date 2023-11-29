@@ -18,6 +18,11 @@ background processing implemented
 TODO:
     redirection
 
+In execvp:
+
+    If the specified filename includes a slash character, then PATH is ignored, and the file at the specified pathname is executed. 
+<a href = "https://linux.die.net/man/3/execvp">about execvp in linux.die.net</a>
+
 
 difference in:
 ```c
