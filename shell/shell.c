@@ -16,13 +16,18 @@ int tokenize(char* buf, char* tokens[], int maxTokens);
 bool run(char* line);
 // run command by given line
 int bulitinHandler(char* tokens[]);
-// handles bulit-in shell command (cd, exit)
-// returns 0 if bulit-in command executed,
-// returns 1 if external command inputs.
+/* handles bulit-in shell command (cd, exit)
+ * returns -1 if exit command executed,
+ * returns 0 if bulit-in command executed,
+ * returns 1 if external command inputs.
+*/
 void printTime();
 // print time and studnet id
 int executeExternal(char* tokens[], int tokenCount);
-// executes external program (ls, ps, kill), uses execvp
+/* executes external program (ls, ps, kill...), uses execvp
+ * returns 0 if command successfully exectued,
+ * returns -1 if failed. 
+*/
 
 int main()
 {
@@ -46,15 +51,16 @@ int main()
 
 int tokenize(char* buf, char* tokens[], int maxTokens)
 { // tokenizes command input
+    int tokenCount = 0;
+
     char *newline = strchr(buf, '\n'); // finds newline char
     if(newline) // if buf have newline char
         *newline = (char *) 0; // replace it to \0
-
-    int tokenCount = 0;
+    
     char* token = strtok(buf, DELIM_CHARS); // tokenize by delimiters
     while(token != NULL && tokenCount < maxTokens)
-    {
-        tokens[tokenCount] = token;
+    { // tokenize buf
+        tokens[tokenCount] = token; // save to each token
         token = strtok(NULL, DELIM_CHARS);
         tokenCount++;
     }
@@ -67,25 +73,30 @@ bool run(char* line)
 { // runs command
     char* tokens[MAX_BUF];
     int tokenCount = tokenize(line, tokens, sizeof(tokens) / sizeof(char*)); // tokenize the given line
-    if(bulitinHandler(tokens))
-    { // if command is not bulit-in handler
-        executeExternal(tokens, tokenCount); // execute external command
-    }
 
-    return true;
+    int returnCode = bulitinHandler(tokens); // handle bulit-in command
+    if(returnCode > 0)
+    { // if command is not bulit-in handler
+        int executeCode = executeExternal(tokens, tokenCount); // execute external command
+        if(executeCode < 0)
+            printf("Execute external command failed\n");
+    } else if(returnCode < 0) // if returns -1
+        return false; // return false
+
+    return true; // handled input line (command)
 }
 
 int bulitinHandler(char* tokens[])
 { // returns 0 -> handled bulit-in command
-    // returns 1 -> not a bulit-in command
-    //
-    char* bulitInList[2] = {"cd", "exit"};
+  // returns 1 -> not a bulit-in command
+  // returns -1 -> exit command
+    char* bulitInList[2] = {"cd", "exit"}; // list of bulit-in command
     int i;
     int cmdType = 0;
     for(i = 0; i < 3; i++)
     {
         if(strcmp(tokens[0], bulitInList[i]) == 0)
-        {
+        { // search if given command matches to bulit-in command
             cmdType = i + 1;
             break;
         }
@@ -97,8 +108,7 @@ int bulitinHandler(char* tokens[])
         return 0;
 
     case 2: // bulit-in command exit
-        printTime();
-        exit(0);
+        return -1;
     
     default:
         break;
@@ -107,79 +117,91 @@ int bulitinHandler(char* tokens[])
 }
 
 void printTime()
-{
+{ // prints time and student id
     time_t timer;
     struct tm* t;
     timer = time(NULL);
     t = localtime(&timer);
     printf("Student id: 32203349\n");
     printf("Current time: %d.%d.%d. %d:%d:%d\n", t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+    // formating the time
 }
 
 int executeExternal(char* tokens[], int tokenCount)
-{
+{ // executes external command(program) using execvp
+  // returns 0 if successfully executed external command,
+  // returns -1 if failed.
     pid_t fork_return;
 
     bool isBackground = false;
     bool isRedirection = false;
+    // flag for background(&) processing or redirection(>)
     if(strcmp(tokens[tokenCount - 1], "&") == 0)
-    {
-        isBackground = true;
-        tokens[tokenCount - 1] = NULL;
+    { // if last token is "&"
+        isBackground = true; // flag -> true
+        tokens[tokenCount - 1] = NULL; // change the token to NULL
         tokenCount--;
     }
+
     int i;
     char *fname = NULL;
     for(i = 0; i < tokenCount; i++)
-    {
+    { // check all the tokens to find redirection point
         if(strcmp(tokens[i], ">") == 0)
-        {
-            isRedirection = true;
-            tokens[i] = NULL; // change into NULL
-            fname = tokens[i + 1];
+        { // if one of the token is ">"
+            isRedirection = true; // flag -> true
+            fname = tokens[i + 1]; // get the redirection destination(file name)
+            tokens[i] = NULL; 
+            tokens[i + 1] = NULL; // change into NULL
             break;
         }
     }
-    // use both of background processing and redirection ?
 
     if((fork_return = fork()) < 0)
-    {
+    { // if fork fails
         printf("fork error\n");
-        exit(-1);
-    } else if(fork_return == 0) // child process runs external command
-    {
+        perror("perror "); // display error msg
+        return -1;
+    } else if(fork_return == 0)
+    { // child process runs external command
         int status_code;
-        if(isRedirection)
+        if(isRedirection) // if redirection flag is true
         {
             int fd = open(fname, O_WRONLY | O_CREAT, 0644);
-            dup2(fd, STDOUT_FILENO);
+            // make or open the target file
+            dup2(fd, STDOUT_FILENO); // change the file descriptor
             close(fd);
             if(fd < 0)
-            {
-                dup2(1, STDOUT_FILENO);
+            { // if open failed,
+                dup2(1, STDOUT_FILENO); // undo changing file descriptor
                 perror("file open error, perror ");
             }
         }
 
-        status_code = execvp(tokens[0], tokens);
-        if(status_code < 0)
+        status_code = execvp(tokens[0], tokens); // executes command with argument
+
+        if(status_code < 0) // if execution failed
         {
-            dup2(1, STDOUT_FILENO);
+            dup2(1, STDOUT_FILENO); // prints error msg in STDOUT_FILENO
+            if(errno == 2)
+            { // if errno is 2 (no such file or directory)
+                printf("Cannot find command \"%s\"\n", tokens[0]);
+            }
             printf("error occured with code: %d\n", status_code);
             printf("errno: %d\n", errno);
-            perror("perror : ");
-            exit(-1);
+            perror("perror ");
+            exit(-1); // exits child process
         }
         
-    } else {
+    } else { // parent process
         int status;
-        if(isBackground) {
+        if(isBackground) { // if background flag is true
             printf("Program started in background using pid: %d\n", fork_return);
         }
-        else {
-            waitpid(fork_return, &status, 0);
+        else { // if background flag is false
+            waitpid(fork_return, &status, 0); // wait until the child process ends
         }
     }
 
-    return 0;
+    return 0; // sucessfully executed external command.
 }
